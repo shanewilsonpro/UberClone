@@ -1,5 +1,5 @@
 import React from 'react';
-import {Image, FlatList} from 'react-native';
+import {Image} from 'react-native';
 
 import MapView, {PROVIDER_GOOGLE, Marker} from 'react-native-maps';
 
@@ -20,6 +20,7 @@ const HomeMap = props => {
     <MapView
       style={{width: '100%', height: '100%'}}
       provider={PROVIDER_GOOGLE}
+      showsUserLocation={true}
       initialRegion={{
         latitude: 28.450627,
         longitude: -16.263045,
@@ -35,6 +36,11 @@ const HomeMap = props => {
               width: 70,
               height: 70,
               resizeMode: 'contain',
+              transform: [
+                {
+                  rotate: `${car.heading}deg`,
+                },
+              ],
             }}
             source={getImage(car.type)}
           />
