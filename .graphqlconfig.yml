@@ -1,0 +1,16 @@
+projects:
+  uberclone:
+    schemaPath: >-
+      Users/shanewilson/Documents/Developments/React_Native_Dev/UberClone/graphql/schema.json
+    includes:
+      - src/graphql/**/*.js
+    excludes:
+      - ./amplify/**
+    extensions:
+      amplify:
+        codeGenTarget: javascript
+        generatedFileName: ''
+        docsFilePath: src/graphql
+extensions:
+  amplify:
+    version: 3

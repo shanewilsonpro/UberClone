@@ -6,19 +6,24 @@ import typesData from '../../assets/data/types';
 
 import styles from './styles';
 
-const UberTypes = props => {
-  const confirm = () => {
-    console.warn('confirm');
-  };
+const UberTypes = ({typeState, onSubmit}) => {
+  const [selectedType, setSelectedType] = typeState;
+
+  
 
   return (
     <View>
       {typesData.map(type => (
-        <UberTypeRow type={type} key={type.id} />
+        <UberTypeRow
+          type={type}
+          key={type.id}
+          isSelected={type.type === selectedType}
+          onPress={() => setSelectedType(type.type)}
+        />
       ))}
 
       <Pressable
-        onPress={confirm}
+        onPress={onSubmit}
         style={{
           backgroundColor: 'black',
           padding: 10,

@@ -1,15 +1,62 @@
-import React from 'react';
-import {View, Dimensions} from 'react-native';
+import React, {useState} from 'react';
+import {View, Dimensions, Alert} from 'react-native';
 
+import {API, graphqlOperation, Auth} from 'aws-amplify';
 import RouteMap from '../../components/RouteMap';
 import UberTypes from '../../components/UberTypes';
+import {createOrder} from '../../graphql/mutations';
 
-import {useRoute} from '@react-navigation/native';
+import {useRoute, useNavigation} from '@react-navigation/native';
 
 const SearchResults = props => {
+  const typeState = useState(null);
+
   const route = useRoute();
+  const navigation = useNavigation();
 
   const {originPlace, destinationPlace} = route.params;
+
+  const onSubmit = async () => {
+    const [type] = typeState;
+
+    if (!type) {
+      return;
+    }
+
+    try {
+      const userInfo = await Auth.currentAuthenticatedUser();
+
+      const date = new Date();
+
+      const input = {
+        createdAt: date.toISOString(),
+        type,
+        originLatitude: originPlace.details.geometry.location.lat,
+        originLongitude: originPlace.details.geometry.location.lng,
+
+        destLatitude: destinationPlace.details.geometry.location.lat,
+        destLongitude: destinationPlace.details.geometry.location.lng,
+
+        userId: userInfo.attributes.sub,
+        carId: '1',
+      };
+
+      const response = await API.graphql(
+        graphqlOperation(createOrder, {
+          input: input,
+        }),
+      );
+
+      Alert.alert('Hurraay', 'Your order has been submitted', [
+        {
+          text: 'Go home',
+          onPress: () => navigation.navigate('Home'),
+        },
+      ]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   return (
     <View style={{display: 'flex', justifyContent: 'space-between'}}>
@@ -18,7 +65,7 @@ const SearchResults = props => {
       </View>
 
       <View style={{height: 400}}>
-        <UberTypes />
+        <UberTypes typeState={typeState} onSubmit={onSubmit} />
       </View>
     </View>
   );
