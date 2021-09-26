@@ -8,6 +8,10 @@ import Ionicons from 'react-native-vector-icons/Ionicons';
 import MapView, {PROVIDER_GOOGLE} from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 
+import {Auth, API, graphqlOperation} from 'aws-amplify';
+import {getCar, listOrders} from '../../graphql/queries';
+import {updateCar, updateOrder} from '../../graphql/mutations';
+
 import NewOrderPopup from '../../components/NewOrderPopup/index.js';
 import styles from './styles.js';
 
@@ -17,42 +21,93 @@ const GOOGLE_MAPS_APIKEY = 'AIzaSyB5G0A7q7IeU1SztDW2PGnrsWy0Hx60lX8';
 
 const HomeScreen = props => {
   const [car, setCar] = useState(null);
-  const [isOnline, setIsOnline] = useState(false);
   const [myPosition, setMyPosition] = useState(null);
   const [order, setOrder] = useState(null);
   const [newOrders, setNewOrders] = useState([]);
 
-  const [newOrder, setNewOrder] = useState({
-    id: '1',
-    type: 'UberX',
+  const fetchCar = async () => {
+    try {
+      const userData = await Auth.currentAuthenticatedUser();
+      const carData = await API.graphql(
+        graphqlOperation(getCar, {id: userData.attributes.sub}),
+      );
+      setCar(carData.data.getCar);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
-    originLatitude: 28.453327,
-    originLongitude: -16.263045,
+  const fetchOrders = async () => {
+    try {
+      const ordersData = await API.graphql(
+        graphqlOperation(listOrders, {filter: {status: {eq: 'NEW'}}}),
+      );
+      setNewOrders(ordersData.data.listOrders.items);
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
-    destLatitude: 28.450927,
-    destLongitude: -16.260845,
-
-    user: {
-      rating: 4.9,
-      name: 'Ciara',
-    },
-  });
+  useEffect(() => {
+    fetchCar();
+    fetchOrders();
+  }, []);
 
   const onDecline = () => {
-    setNewOrder(null);
+    setNewOrders(newOrders.slice(1));
   };
 
-  const onAccept = newOrder => {
-    setOrder(newOrder);
-    setNewOrder(null);
+  const onAccept = async newOrder => {
+    try {
+      const input = {
+        id: newOrder.id,
+        status: 'PICKING_UP_CLIENT',
+        carId: car.id,
+      };
+      const orderData = await API.graphql(
+        graphqlOperation(updateOrder, {input}),
+      );
+      setOrder(orderData.data.updateOrder);
+    } catch (e) {}
+
+    setNewOrders(newOrders.slice(1));
   };
 
-  const onGoPress = () => {
-    setIsOnline(!isOnline);
+  const onGoPress = async () => {
+    // Update the car and set it to active
+    try {
+      const userData = await Auth.currentAuthenticatedUser();
+      const input = {
+        id: userData.attributes.sub,
+        isActive: !car.isActive,
+      };
+      const updatedCarData = await API.graphql(
+        graphqlOperation(updateCar, {input}),
+      );
+      setCar(updatedCarData.data.updateCar);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  const onUserLocationChange = event => {
-    setMyPosition(event.nativeEvent.coordinate);
+  const onUserLocationChange = async event => {
+    const {latitude, longitude, heading} = event.nativeEvent.coordinate;
+    // Update the car and set it to active
+    try {
+      const userData = await Auth.currentAuthenticatedUser();
+      const input = {
+        id: userData.attributes.sub,
+        latitude,
+        longitude,
+        heading,
+      };
+      const updatedCarData = await API.graphql(
+        graphqlOperation(updateCar, {input}),
+      );
+      setCar(updatedCarData.data.updateCar);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const onDirectionFound = event => {
@@ -174,7 +229,10 @@ const HomeScreen = props => {
         }}>
         {order && (
           <MapViewDirections
-            origin={myPosition}
+            origin={{
+              latitude: car?.latitude,
+              longitude: car?.longitude,
+            }}
             onReady={onDirectionFound}
             destination={getDestination()}
             apikey={GOOGLE_MAPS_APIKEY}
@@ -216,7 +274,7 @@ const HomeScreen = props => {
 
       {/* Go or End Button */}
       <Pressable onPress={onGoPress} style={styles.goButton}>
-        <Text style={styles.goText}>{isOnline ? 'END' : 'GO'}</Text>
+        <Text style={styles.goText}>{car?.isActive ? 'END' : 'GO'}</Text>
       </Pressable>
 
       <View style={styles.bottomContainer}>
@@ -225,13 +283,13 @@ const HomeScreen = props => {
         <Entypo name={'menu'} size={30} color="#4a4a4a" />
       </View>
 
-      {newOrder && (
+      {newOrders.length > 0 && !order && (
         <NewOrderPopup
-          newOrder={newOrder}
+          newOrder={newOrders[0]}
           duration={2}
           distance={0.5}
           onDecline={onDecline}
-          onAccept={() => onAccept(newOrder)}
+          onAccept={() => onAccept(newOrders[0])}
         />
       )}
     </SafeAreaView>

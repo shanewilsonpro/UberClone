@@ -39,6 +39,7 @@ const SearchResults = props => {
 
         userId: userInfo.attributes.sub,
         carId: '1',
+        status: 'NEW',
       };
 
       const response = await API.graphql(
@@ -47,12 +48,7 @@ const SearchResults = props => {
         }),
       );
 
-      Alert.alert('Hurraay', 'Your order has been submitted', [
-        {
-          text: 'Go home',
-          onPress: () => navigation.navigate('Home'),
-        },
-      ]);
+      navigation.navigate('OrderPage', {id: response.data.createOrder.id});
     } catch (e) {
       console.error(e);
     }
