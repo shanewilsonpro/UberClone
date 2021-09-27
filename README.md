@@ -11,13 +11,19 @@ This project is using React Native with AWS Amplify. Also built two apps within 
 
 ## Demo
 
-### User App
-<img src="images/userapp1.png" alt="userapp" width="200"/>
-<img src="images/userapp2.png" alt="userapp" width="200"/>
-
-### Driver App
-<img src="images/driverapp1.png" alt="driverapp" width="200"/>
-<img src="images/driverapp2.png" alt="driverapp" width="200"/>
-
-### AWS Amplify
-<img src="images/awsamplifyauth.png" alt="awsamplify" width="200"/>
+<table border="0">
+ <tr>
+    <td><b style="font-size:20px"><p align="center">User App</p></b></td>
+    <td><b style="font-size:20px"><p align="center">Driver App</p></b></td>
+ </tr>
+ <tr>
+    <td>
+        <img src="images/userapp1.png" alt="userapp" width="150"/>
+        <img src="images/userapp2.png" alt="userapp" width="150"/>
+    </td>
+    <td>
+        <img src="images/driverapp1.png" alt="driverapp" width="150"/>
+        <img src="images/driverapp2.png" alt="driverapp" width="150"/>
+        </td>
+ </tr>
+</table>
